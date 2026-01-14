@@ -9,7 +9,9 @@
     <Delete v-if="$store.state.delete" />
 
     <!-- Header -->
-    <Header />
+    <div class="fixed-header">
+      <Header />
+    </div>
 
     <!-- Page Content -->
     <main class="page-content">
@@ -50,6 +52,7 @@ export default {
 
 /* Asosiy kontent */
 .page-content {
+  padding-top: 72px; /* Offset for fixed header */
   flex: 1;
   padding: 30px 40px;
 }
@@ -74,6 +77,16 @@ export default {
   color: #fff;
   font-size: 16px;
   cursor: pointer;
+}
+
+/* Fixed header */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
 }
 
 /* Responsive */

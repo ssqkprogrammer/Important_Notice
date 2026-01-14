@@ -2,45 +2,64 @@
   <main class="container2">
     <h2>Important Notice</h2>
 
-    <!-- ADD/EDIT FORM (bitta forma) -->
-    <form class="card form-card" @submit.prevent="handleSubmit">
-      <h3>
-        {{ editId ? "Ma'lumotni tahrirlash" : "Yangi ma'lumot qo‘shish" }}
-      </h3>
-      <select v-model="form.type_organization">
-        <option value="">Tashkilot turi</option>
-        <option value="company">Company</option>
-        <option value="individual">Individual</option>
-      </select>
-      <input v-model="form.organization" placeholder="Tashkilot nomi" />
-      <input v-model="form.full_name" placeholder="F.I.Sh" required />
-      <input v-model="form.citizenship" placeholder="Fuqaroligi" />
-      <input v-model="form.passport_number" placeholder="Passport raqami" />
-      <label>Passport berilgan sana</label>
-      <input type="date" v-model="form.passport_issued_date" />
-      <input v-model="form.visa_type" placeholder="Visa turi" />
-      <label>Visa boshlanish sanasi</label>
-      <input type="date" v-model="form.visa_start_date" />
-      <label>Visa tugash sanasi</label>
-      <input type="date" v-model="form.visa_end_date" />
-      <input
-        v-model="form.temporary_address"
-        placeholder="Vaqtinchalik manzil"
-      />
-      <input v-model="form.position" placeholder="Lavozim" />
-      <label>Ish boshlash sanasi</label>
-      <input type="date" v-model="form.work_start_date" />
-      <input v-model="form.phone_number" placeholder="Telefon raqami" />
-      <textarea v-model="form.comment" placeholder="Izoh"></textarea>
-      <div class="modal-actions">
-        <button type="submit" class="primary-btn">
-          {{ editId ? "Saqlash" : "Qo‘shish" }}
-        </button>
-        <button v-if="editId" type="button" @click="cancelEdit">
-          Bekor qilish
-        </button>
+    <!-- Add button to open modal -->
+    <div class="top-actions">
+      <button class="primary-btn" @click="openAdd">Qo‘shish</button>
+    </div>
+
+    <!-- FORM moved into modal (opened when showModal is true) -->
+    <div v-if="showModal" class="modal-overlay" @click.self="cancelEdit">
+      <div class="modal-content card form-card">
+        <form @submit.prevent="handleSubmit">
+          <h3>
+            {{ editId ? "Ma'lumotni tahrirlash" : "Yangi ma'lumot qo‘shish" }}
+          </h3>
+          <select v-model="form.type_organization">
+            <option value="">Tashkilot turi</option>
+            <option value="company">Company</option>
+            <option value="individual">Individual</option>
+          </select>
+          <input v-model="form.organization" placeholder="Tashkilot nomi" />
+          <input v-model="form.full_name" placeholder="F.I.Sh" required />
+          <input v-model="form.citizenship" placeholder="Fuqaroligi" />
+          <input
+            v-model="form.passport_number"
+            v-numeric
+            inputmode="numeric"
+            placeholder="Passport raqami"
+          />
+          <label>Passport berilgan sana</label>
+          <input type="date" v-model="form.passport_issued_date" />
+          <input v-model="form.visa_type" placeholder="Visa turi" />
+          <label>Visa boshlanish sanasi</label>
+          <input type="date" v-model="form.visa_start_date" />
+          <label>Visa tugash sanasi</label>
+          <input type="date" v-model="form.visa_end_date" />
+          <input
+            v-model="form.temporary_address"
+            placeholder="Vaqtinchalik manzil"
+          />
+          <input v-model="form.position" placeholder="Lavozim" />
+          <label>Ish boshlash sanasi</label>
+          <input type="date" v-model="form.work_start_date" />
+          <input
+            type="tel"
+            v-model="form.phone_number"
+            v-phone-mask
+            inputmode="tel"
+            placeholder="+998 (__) ___-__-__"
+          />
+          <textarea v-model="form.comment" placeholder="Izoh"></textarea>
+
+          <div class="modal-actions">
+            <button type="submit" class="primary-btn">
+              {{ editId ? "Saqlash" : "Qo‘shish" }}
+            </button>
+            <button type="button" @click="cancelEdit">Bekor qilish</button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
 
     <!-- LIST -->
     <div class="card table-wrapper">
@@ -107,6 +126,69 @@
 
 <script>
 export default {
+  directives: {
+    phoneMask: {
+      mounted(el) {
+        const handler = (e) => {
+          let v = el.value || "";
+          let digits = v.replace(/\D/g, "");
+
+          // If user typed full country code, strip it for formatting
+          if (digits.startsWith("998")) digits = digits.slice(3);
+
+          digits = digits.slice(0, 9); // Uzbek phone numbers have 9 local digits after +998
+
+          if (digits.length === 0) {
+            el.value = "";
+            el.dispatchEvent(new Event("input"));
+            return;
+          }
+
+          const a = digits.slice(0, 2);
+          const b = digits.slice(2, 5);
+          const c = digits.slice(5, 7);
+          const d = digits.slice(7, 9);
+
+          let masked = "+998 ";
+          masked += a;
+          if (a.length === 2) masked = `+998 (${a}) `;
+          if (b) masked += b;
+          if (c) masked += `-${c}`;
+          if (d) masked += `-${d}`;
+
+          el.value = masked;
+          el.dispatchEvent(new Event("input"));
+        };
+
+        el._phoneMaskHandler = handler;
+        el.addEventListener("input", handler);
+      },
+      beforeUnmount(el) {
+        if (el._phoneMaskHandler)
+          el.removeEventListener("input", el._phoneMaskHandler);
+      },
+    },
+
+    numeric: {
+      mounted(el) {
+        const handler = () => {
+          const v = el.value || "";
+          const digits = v.replace(/\D/g, "");
+          if (v !== digits) {
+            el.value = digits;
+            el.dispatchEvent(new Event("input"));
+          }
+        };
+
+        el._numericHandler = handler;
+        el.addEventListener("input", handler);
+      },
+      beforeUnmount(el) {
+        if (el._numericHandler)
+          el.removeEventListener("input", el._numericHandler);
+      },
+    },
+  },
   data() {
     return {
       notices: [],
@@ -128,6 +210,7 @@ export default {
         status: "active",
       },
       editId: null,
+      showModal: false, // NEW: control modal visibility
     };
   },
 
@@ -149,6 +232,13 @@ export default {
       if (!date) return "-";
       const d = new Date(date);
       return d.toLocaleDateString("ru-RU");
+    },
+
+    // NEW: open add modal and reset form
+    openAdd() {
+      this.editId = null;
+      this.resetForm();
+      this.showModal = true;
     },
 
     // CREATE or UPDATE
@@ -175,6 +265,7 @@ export default {
           .then(() => {
             this.getAll();
             this.resetForm();
+            this.showModal = false; // close modal after add
           })
           .catch(console.log);
       }
@@ -239,6 +330,8 @@ export default {
             comment: d.comment || "",
             status: d.status || "active",
           };
+
+          this.showModal = true; // OPEN modal when editing
         })
         .catch((err) => {
           console.error("Edit load error:", err);
@@ -248,6 +341,7 @@ export default {
     cancelEdit() {
       this.editId = null;
       this.resetForm();
+      this.showModal = false; // close modal
     },
     resetForm() {
       // Faqat yangi qo'shishda formani tozalash uchun
@@ -272,6 +366,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 .container2 {
   padding: 32px 10vw;
@@ -393,5 +488,32 @@ button:hover {
 .archive {
   color: gray;
   font-weight: bold;
+}
+
+.top-actions {
+  max-width: 700px;
+  margin: 0 auto 12px auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
 }
 </style>
