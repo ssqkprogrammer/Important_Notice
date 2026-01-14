@@ -28,7 +28,8 @@ import DataError from "../components/alerts/DataError.vue";
 import DataDelete from "../components/alerts/DataDelete.vue";
 import DataSendBasket from "../components/alerts/DataSendBasket.vue";
 import Delete from "../components/alerts/Delete.vue";
-
+// MOnolit Dom yasalgan zayvkalar yanvardan bugungi kungacha olib berish kerak
+// MOnolit Domni ichida yasalgan  Propan gaz uchun chiqqan 
 export default {
   components: {
     Header,
