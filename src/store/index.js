@@ -3,8 +3,8 @@ import axios from "axios";
 
 export default createStore({
   state: {
-    // baseUrl: "http://localhost:9001",
-    baseUrl: "https://oldapihr.movaro.net",
+    baseUrl: "http://localhost:9001",
+    // baseUrl: "https://oldapihr.movaro.net",
     data_add: false,
     delete: false,
     data_block: false,
@@ -90,6 +90,11 @@ export default createStore({
         const userResponse = await axios.get(
           `${state.baseUrl}/api/user/byid/${userId}`
         );
+
+        if (!userResponse.data) {
+          console.error("Foydalanuvchi ma'lumotlari topilmadi.");
+          return;
+        }
 
         let role = userResponse.data.role;
         console.log(role);

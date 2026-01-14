@@ -16,8 +16,6 @@
   </nav>
 </template>
 
-Toq kunlarei
-
 <script>
 export default {
   data() {
