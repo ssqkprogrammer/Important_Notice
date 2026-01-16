@@ -3,8 +3,8 @@ import axios from "axios";
 
 export default createStore({
   state: {
-    baseUrl: "http://localhost:9001",
-    // baseUrl: "https://oldapihr.movaro.net",
+    // baseUrl: "http://localhost:9001",
+    baseUrl: "https://apihr.movaro.net",
     data_add: false,
     delete: false,
     data_block: false,

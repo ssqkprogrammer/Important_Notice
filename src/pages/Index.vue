@@ -4,6 +4,12 @@
 
     <!-- Add button to open modal -->
     <div class="top-actions">
+      <button class="import-btn" @click="importFromJSON">
+        📥 JSON dan yuklash
+      </button>
+      <button class="export-btn" @click="exportToJSON">
+        📤 JSON ga eksport
+      </button>
       <button class="primary-btn" @click="openAdd">Qo‘shish</button>
     </div>
 
@@ -16,20 +22,24 @@
           </h3>
           <select v-model="form.type_organization">
             <option value="">Tashkilot turi</option>
-            <option value="company">Company</option>
-            <option value="individual">Individual</option>
+            <option value="Қурилиш">Qurilish</option>
+            <option value="Ишлаб чиқариш">Ishlab chiqarish</option>
+            <option value="Хизмат кўрсатиш">Xizmat kursatish</option>
           </select>
           <input v-model="form.organization" placeholder="Tashkilot nomi" />
           <input v-model="form.full_name" placeholder="F.I.Sh" required />
           <input v-model="form.citizenship" placeholder="Fuqaroligi" />
           <input
             v-model="form.passport_number"
-            v-numeric
-            inputmode="numeric"
+            type="text"
             placeholder="Passport raqami"
           />
           <label>Passport berilgan sana</label>
           <input type="date" v-model="form.passport_issued_date" />
+
+          <label>Passport tugash sanasi</label>
+          <input type="date" v-model="form.passport_end_date" />
+
           <input v-model="form.visa_type" placeholder="Visa turi" />
           <label>Visa boshlanish sanasi</label>
           <input type="date" v-model="form.visa_start_date" />
@@ -75,6 +85,7 @@
             <th>Fuqaroligi</th>
             <th>Passport</th>
             <th>Passport sana</th>
+            <th>Passport tugash</th>
             <th>Visa turi</th>
             <th>Visa boshi</th>
             <th>Visa oxiri</th>
@@ -97,6 +108,7 @@
             <td>{{ item.citizenship }}</td>
             <td>{{ item.passport_number }}</td>
             <td>{{ formatDate(item.passport_issued_date) }}</td>
+            <td>{{ formatDate(item.passport_end_date) }}</td>
             <td>{{ item.visa_type }}</td>
             <td>{{ formatDate(item.visa_start_date) }}</td>
             <td>{{ formatDate(item.visa_end_date) }}</td>
@@ -199,6 +211,7 @@ export default {
         citizenship: "",
         passport_number: "",
         passport_issued_date: "",
+        passport_end_date: "",
         visa_type: "",
         visa_start_date: "",
         visa_end_date: "",
@@ -219,6 +232,130 @@ export default {
   },
 
   methods: {
+    // IMPORT FROM JSON FILE
+    async importFromJSON() {
+      if (
+        !confirm("JSON faylidagi ma'lumotlarni bazaga yuklashni xohlaysizmi?")
+      ) {
+        return;
+      }
+
+      try {
+        // Import JSON file
+        const jsonData = await import("@/json/json.json");
+        const data = jsonData.default || jsonData;
+
+        // Convert date format from MM/DD/YYYY to YYYY-MM-DD
+        const convertDate = (dateStr) => {
+          if (!dateStr || dateStr === "_") return "";
+          const parts = dateStr.split("/");
+          if (parts.length === 3) {
+            const [month, day, year] = parts;
+            return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+          }
+          return dateStr;
+        };
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Import each record
+        for (const item of data) {
+          const formData = {
+            type_organization: item.type_organization || "",
+            organization: item.organization || "",
+            full_name: item.full_name || "",
+            citizenship: item.citizenship || "",
+            passport_number: item.passport_number || "",
+            passport_issued_date: convertDate(item.passport_issued_date),
+            passport_end_date: convertDate(item.passport_end_date),
+            visa_type: item.visa_type || "",
+            visa_start_date: convertDate(item.visa_start_date),
+            visa_end_date: convertDate(item.visa_end_date),
+            temporary_address: item.temporary_address || "",
+            position: item.position || "",
+            work_start_date: convertDate(item.work_start_date),
+            phone_number: item.phone_number || "",
+            comment: item.comment || "",
+            status: "active",
+          };
+
+          try {
+            await this.axios.post(
+              `${this.$store.state.baseUrl}/api/important_notice/add`,
+              formData
+            );
+            successCount++;
+          } catch (err) {
+            console.error("Import error:", err);
+            errorCount++;
+          }
+        }
+
+        alert(
+          `Import yakunlandi!\nMuvaffaqiyatli: ${successCount}\nXato: ${errorCount}`
+        );
+        this.getAll();
+      } catch (err) {
+        console.error("JSON yuklashda xatolik:", err);
+        alert("JSON faylni yuklashda xatolik yuz berdi!");
+      }
+    },
+
+    // EXPORT TO JSON FILE
+    exportToJSON() {
+      if (this.notices.length === 0) {
+        alert("Eksport qilish uchun ma'lumot yo'q!");
+        return;
+      }
+
+      // Convert date format from ISO to MM/DD/YYYY
+      const convertDate = (dateStr) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+      };
+
+      const exportData = this.notices.map((item) => ({
+        type_organization: item.type_organization || "",
+        organization: item.organization || "",
+        full_name: item.full_name || "",
+        citizenship: item.citizenship || "",
+        passport_number: item.passport_number || "",
+        passport_issued_date: convertDate(item.passport_issued_date),
+        passport_end_date: convertDate(item.passport_end_date),
+        visa_type: item.visa_type || "",
+        visa_start_date: convertDate(item.visa_start_date),
+        visa_end_date: convertDate(item.visa_end_date),
+        temporary_address: item.temporary_address || "",
+        position: item.position || "",
+        work_start_date: convertDate(item.work_start_date),
+        phone_number: item.phone_number || "",
+        comment: item.comment || "",
+      }));
+
+      // Create JSON string with proper formatting
+      const jsonString = JSON.stringify(exportData, null, 1);
+
+      // Create blob and download
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `important_notice_${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert("Ma'lumotlar muvaffaqiyatli eksport qilindi!");
+    },
+
     // GET ALL
     getAll() {
       this.axios
@@ -316,6 +453,9 @@ export default {
             passport_issued_date: d.passport_issued_date
               ? d.passport_issued_date.slice(0, 10)
               : "",
+            passport_end_date: d.passport_end_date
+              ? d.passport_end_date.slice(0, 10)
+              : "",
             visa_type: d.visa_type || "",
             visa_start_date: d.visa_start_date
               ? d.visa_start_date.slice(0, 10)
@@ -352,6 +492,7 @@ export default {
         citizenship: "",
         passport_number: "",
         passport_issued_date: "",
+        passport_end_date: "",
         visa_type: "",
         visa_start_date: "",
         visa_end_date: "",
@@ -495,6 +636,18 @@ button:hover {
   margin: 0 auto 12px auto;
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button.import-btn {
+  background: #27ae60;
+  color: #fff;
+}
+
+button.export-btn {
+  background: #8e44ad;
+  color: #fff;
 }
 
 /* Modal styles */
