@@ -283,7 +283,7 @@ export default {
           try {
             await this.axios.post(
               `${this.$store.state.baseUrl}/api/important_notice/add`,
-              formData
+              formData,
             );
             successCount++;
           } catch (err) {
@@ -293,7 +293,7 @@ export default {
         }
 
         alert(
-          `Import yakunlandi!\nMuvaffaqiyatli: ${successCount}\nXato: ${errorCount}`
+          `Import yakunlandi!\nMuvaffaqiyatli: ${successCount}\nXato: ${errorCount}`,
         );
         this.getAll();
       } catch (err) {
@@ -385,7 +385,7 @@ export default {
         this.axios
           .put(
             `${this.$store.state.baseUrl}/api/important_notice/info/${this.editId}`,
-            this.form
+            this.form,
           )
           .then(() => {
             this.getAll();
@@ -397,7 +397,7 @@ export default {
         this.axios
           .post(
             `${this.$store.state.baseUrl}/api/important_notice/add`,
-            this.form
+            this.form,
           )
           .then(() => {
             this.getAll();
@@ -414,7 +414,7 @@ export default {
       this.axios
         .put(
           `${this.$store.state.baseUrl}/api/important_notice/status/${item._id}`,
-          { status }
+          { status },
         )
         .then(() => {
           item.status = status;
@@ -427,7 +427,7 @@ export default {
       if (!confirm("O‘chirishni xohlaysizmi?")) return;
       this.axios
         .delete(
-          `${this.$store.state.baseUrl}/api/important_notice/delete/${id}`
+          `${this.$store.state.baseUrl}/api/important_notice/delete/${id}`,
         )
         .then(() => {
           this.notices = this.notices.filter((i) => i._id !== id);
